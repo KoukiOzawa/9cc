@@ -1,5 +1,6 @@
 #include<stdio.h>
 #include<stdlib.h>
+#include<stdbool.h>
 #include<stdarg.h>
 #include<stdlib.h>
 #include<string.h>
@@ -9,7 +10,7 @@ typedef enum{
   TK_RESERVED, //記号
   TK_NUM, //整数トークン
   TK_EOF, //入力の終わりを表すトークン
-}TokenKind
+}TokenKind;
 
 typedef struct Token Token;
 
@@ -47,7 +48,7 @@ void expect(char op){
 
 int expect_number(){
   if(token->kind != TK_NUM)
-    error("数ではありません")
+    error("数ではありません");
   int val = token->val;
   token = token->next;
   return val;
@@ -65,7 +66,7 @@ Token *new_token(TokenKind kind, Token *cur, char *str){
   return tok;
 }
 
-Token *tokenize(cahr *p){
+Token *tokenize(char *p){
   Token head;
   head.next = NULL;
   Token *cur = &head;
@@ -83,7 +84,8 @@ Token *tokenize(cahr *p){
     }
 
     if(isdigit(*p)){
-      cur = new_token(TK_NUM, cur, p++);
+      cur = new_token(TK_NUM, cur, p);
+      //strtolでポインタを進めている
       cur->val = strtol(p, &p, 10);
       continue;
     }
@@ -104,21 +106,20 @@ int main(int argc, char **argv){
 
   token = tokenize(argv[1]);
   
-  char *p = argv[1];
   printf(".intel_syntax noprefix\n");
   printf(".globl main\n");
   printf("main:\n");
   //式の最初は数である必要がある
-  printf(" mov rax, %ld\n", strtol(p, &p, 10));
+  printf(" mov rax, %d\n", expect_number());
 
   while(!at_eof()){
     if(consume('+')){
-      printf(" add rax, %ld", expect_number());
+      printf(" add rax, %d\n", expect_number());
       continue;
     }
 
     expect('-');
-    printf(" sub rax, %ld", expect_number());
+    printf(" sub rax, %d\n", expect_number());
   }
 
   printf(" ret\n");
